@@ -1,10 +1,12 @@
 import { state, queueCounts } from '../lib/store.js';
 import { LEVELS } from '../data/test.js';
 import { dayKey } from '../lib/util.js';
+import { courseStatus } from './course.js';
 
 export default function home(root) {
   const p = state.profile;
   const q = queueCounts();
+  const cs = courseStatus();
   const streak = state.stats.lastDay === dayKey() || state.stats.streak === 0 ? state.stats.streak : state.stats.streak;
   const nextKind = state.reading.turn % 2 === 0 ? '时事新闻' : '经典文学';
 
@@ -43,6 +45,10 @@ export default function home(root) {
     <a class="card tap" href="#/read">
       <div class="row spread"><h3>📖 今日阅读</h3><span class="tag">${nextKind}</span></div>
       <div class="muted small">时事与经典轮流读,点任意单词即可查词、加入生词本</div>
+    </a>
+    <a class="card tap" href="#/read/course">
+      <div class="row spread"><h3>🧩 长难句课程</h3><span class="tag ${cs.today >= cs.daily ? 'ok' : ''}">今日 ${cs.today} / ${cs.daily}</span></div>
+      <div class="muted small">每天 3 句,一步步拆解 · 已学 ${cs.learned} / ${cs.total} 句</div>
     </a>
     <a class="card tap" href="#/speak">
       <h3>🎧 听力与口语</h3>

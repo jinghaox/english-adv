@@ -3,6 +3,7 @@ import { state, save, addCard, touchStreak } from '../lib/store.js';
 import { esc, dayKey, toast } from '../lib/util.js';
 import { speak, stopSpeak, canSpeak } from '../lib/speech.js';
 import { hasKey, studyGuide, explainWord, errorText } from '../lib/ai.js';
+import courseView, { courseStatus } from './course.js';
 
 const NEWS_KEY = 'english_adv_news';
 const DAY = 86400000;
@@ -133,11 +134,17 @@ function saveGuide(id, guide) {
 function list(root) {
   const turnKind = state.reading.turn % 2 === 0 ? 'news' : 'classic';
   const done = state.reading.done;
+  const cs = courseStatus();
   const nextClassic = CLASSICS.find((c) => !done[c.id]) || CLASSICS[Math.floor(state.reading.turn / 2) % CLASSICS.length];
 
   root.innerHTML = `
     <h1>阅读</h1>
     <div id="pick"></div>
+    <a class="card tap" href="#/read/course">
+      <div class="row spread"><h3>🧩 长难句课程</h3>
+        <span class="tag ${cs.today >= cs.daily ? 'ok' : ''}">今日 ${cs.today} / ${cs.daily}</span></div>
+      <div class="muted small">每天 3 句,按“主干 → 拆解 → 译文”一步步读懂 · 已学 ${cs.learned} / ${cs.total} 句</div>
+    </a>
     <h2>📰 时事新闻</h2>
     <div class="card" id="news"><span class="spinner"></span> <span class="muted">正在获取今日要闻…</span></div>
     <h2>📥 我的文章</h2>
@@ -499,7 +506,8 @@ function importView(root) {
 }
 
 export default function read(root, [id]) {
-  if (id === 'import') importView(root);
+  if (id === 'course') courseView(root);
+  else if (id === 'import') importView(root);
   else if (id) reader(root, id);
   else list(root);
 }

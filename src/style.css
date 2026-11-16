@@ -120,6 +120,14 @@ button.danger { color: var(--bad); }
 .example .en { font-family: Georgia, "Times New Roman", serif; font-size: 17px; line-height: 1.5; }
 .example .zh { color: var(--muted); font-size: 14px; margin-top: 4px; }
 .example #sayex { cursor: pointer; font-size: 15px; }
+.part { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.part:last-child { border-bottom: 0; padding-bottom: 0; }
+.part .en { font-family: Georgia, "Times New Roman", serif; font-size: 16px; color: var(--brand); }
+details.learned { padding: 10px 0; border-bottom: 1px solid var(--line); }
+details.learned:last-child { border-bottom: 0; }
+details.learned summary { cursor: pointer; font-family: Georgia, "Times New Roman", serif; line-height: 1.5; }
+details.learned[open] summary { margin-bottom: 10px; }
+details.learned .card { background: var(--bg); }
 .root {
   text-align: left; font-size: 14px; line-height: 1.6; margin-top: 14px; padding: 10px 12px;
   background: var(--brand-soft); border-radius: 12px;

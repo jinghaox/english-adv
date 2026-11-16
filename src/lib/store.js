@@ -10,6 +10,8 @@ const defaults = () => ({
   settings: { apiKey: '', model: 'claude-opus-5-5', rate: 0.95, newPerDay: 10 },
   reading: { turn: 0, done: {} },
   custom: [], // 用户导入的文章 { id, title, text: [段落], added }
+  // 长难句课程:idx 已学到第几句;today 今天学了几句;extra 今天额外加的名额;review 待复习的句子编号
+  course: { idx: 0, day: '', today: 0, extra: 0, review: [] },
   stats: { lastDay: '', streak: 0, newDay: '', newCount: 0 },
   chat: { scenario: 'free', messages: [] },
 });

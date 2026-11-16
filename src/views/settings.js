@@ -1,6 +1,7 @@
 import { state, save, resetAll } from '../lib/store.js';
 import { esc, toast } from '../lib/util.js';
 import { speak, canSpeak } from '../lib/speech.js';
+import { MODELS } from '../lib/ai.js';
 
 export default function settings(root) {
   const s = state.settings;
@@ -16,6 +17,9 @@ export default function settings(root) {
         <button class="primary grow" id="savekey">保存</button>
         <button class="grow" id="clearkey">清除</button>
       </div>
+      <label for="model">AI 模型</label>
+      <select id="model">${MODELS.map((m) => `<option value="${m.id}" ${m.id === s.model ? 'selected' : ''}>${esc(m.name)} · ${esc(m.note)}</option>`).join('')}</select>
+      <p class="small muted" id="modelnote" style="margin:8px 0 0"></p>
     </div>
 
     <div class="card">
@@ -49,6 +53,19 @@ export default function settings(root) {
     root.querySelector('#key').value = '';
     save();
     toast('密钥已清除');
+  };
+  const showModelNote = () => {
+    const m = MODELS.find((x) => x.id === s.model) || MODELS[0];
+    root.querySelector('#modelnote').textContent = `价格(每百万 token,输入 / 输出):${m.price}。越便宜的模型,纠错和讲解的细致程度越低。`;
+  };
+  showModelNote();
+  root.querySelector('#model').onchange = (e) => {
+    s.model = e.target.value;
+    // 不同模型之间不能接续同一段对话,切换后从新对话开始
+    state.chat.messages = [];
+    save();
+    showModelNote();
+    toast('模型已切换,AI 对话将从新对话开始');
   };
   root.querySelector('#rate').oninput = (e) => {
     s.rate = +e.target.value;

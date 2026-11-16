@@ -2,9 +2,16 @@ import Anthropic from '@anthropic-ai/sdk';
 import { state } from './store.js';
 import { LEVELS } from '../data/test.js';
 
-const MODEL = 'claude-opus-5-5';
-// 服务端回退:主模型因安全策略拒答时,由 API 自动改用备用模型重试
+// 可在“设置”中切换的模型。价格为每百万 token 的美元价(输入 / 输出)。
+// fallback: 该模型是否支持服务端回退(主模型因安全策略拒答时,由 API 自动改用备用模型重试)。
+export const MODELS = [
+  { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', note: '质量最好', price: '$4 / $20', fallback: true },
+  { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', note: '均衡,约半价', price: '$2 / $10', fallback: true },
+  { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5', note: '最便宜,约 1/40', price: '$0.10 / $0.50', fallback: false },
+];
 const BETAS = ['server-side-fallback-2026-07-01'];
+
+const currentModel = () => MODELS.find((m) => m.id === state.settings.model) || MODELS[0];
 
 export const hasKey = () => !!state.settings.apiKey;
 
@@ -38,15 +45,11 @@ const textOf = (content) =>
 // 流式请求。返回 { text, content };content 是完整的内容块数组,
 // 多轮对话时必须原样回传(其中包含思考块)。
 export async function ask({ system, messages, onText, maxTokens = 16000 }) {
-  const stream = client().beta.messages.stream({
-    model: MODEL,
-    max_tokens: maxTokens,
-    betas: BETAS,
-    fallbacks: 'default',
-    output_config: { effort: 'low' },
-    system,
-    messages,
-  });
+  const model = currentModel();
+  const params = { model: model.id, max_tokens: maxTokens, output_config: { effort: 'low' }, system, messages };
+  const stream = model.fallback
+    ? client().beta.messages.stream({ ...params, betas: BETAS, fallbacks: 'default' })
+    : client().messages.stream(params);
   let soFar = '';
   for await (const event of stream) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

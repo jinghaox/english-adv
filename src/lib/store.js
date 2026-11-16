@@ -7,7 +7,7 @@ const DAY = 86400000;
 const defaults = () => ({
   profile: null, // { vocab, vLevel, sCorrect, sTotal, sLevel, level, date }
   cards: {}, // word -> { w, zh, ex, due, ivl, ease, reps, isNew, added }
-  settings: { apiKey: '', rate: 0.95, newPerDay: 10 },
+  settings: { apiKey: '', model: 'claude-opus-5-5', rate: 0.95, newPerDay: 10 },
   reading: { turn: 0, done: {} },
   custom: [], // 用户导入的文章 { id, title, text: [段落], added }
   stats: { lastDay: '', streak: 0, newDay: '', newCount: 0 },

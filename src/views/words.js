@@ -2,6 +2,7 @@ import { state, buildQueue, gradeCard, removeCard } from '../lib/store.js';
 import { esc } from '../lib/util.js';
 import { speak, canSpeak } from '../lib/speech.js';
 import { ROOTS } from '../data/roots.js';
+import { EXAMPLES } from '../data/examples.js';
 
 let tab = 'review';
 
@@ -40,6 +41,8 @@ export default function wordsView(root) {
         </div>`);
         return;
       }
+      // 内置例句(带翻译)优先;自己加入的生词用加入时的原文句子
+      const [exEn, exZh] = EXAMPLES[card.w] || [card.ex || '', ''];
       const pane = frame(`
         <div class="row spread small muted"><span>${card.isNew ? '<span class="tag">新词</span>' : '<span class="tag gray">复习</span>'}</span><span>剩余 ${queue.length + 1}</span></div>
         <div class="progress"><i style="width:${total ? (doneCount / total) * 100 : 0}%"></i></div>
@@ -48,7 +51,14 @@ export default function wordsView(root) {
           ${canSpeak ? '<button class="ghost icon" id="say" aria-label="朗读">🔊</button>' : ''}
           <div id="back" hidden>
             <p style="font-size:18px;margin-top:14px">${esc(card.zh)}</p>
-            ${card.ex ? `<p class="muted" style="font-family:Georgia,serif;font-style:italic">${esc(card.ex)}</p>` : ''}
+            ${
+              exEn
+                ? `<div class="example">
+                    <div class="en">${esc(exEn)} ${canSpeak ? '<span id="sayex" role="button" aria-label="朗读例句">🔊</span>' : ''}</div>
+                    ${exZh ? `<div class="zh">${esc(exZh)}</div>` : ''}
+                  </div>`
+                : ''
+            }
             ${ROOTS[card.w] ? `<div class="root"><b>🌱 词根</b> ${esc(ROOTS[card.w])}</div>` : ''}
           </div>
         </div>
@@ -63,6 +73,7 @@ export default function wordsView(root) {
           </div>
         </div>`);
       pane.querySelector('#say')?.addEventListener('click', () => speak(card.w));
+      pane.querySelector('#sayex')?.addEventListener('click', () => speak(exEn));
       pane.querySelector('#show').onclick = () => {
         pane.querySelector('#back').hidden = false;
         pane.querySelector('#grades').hidden = false;

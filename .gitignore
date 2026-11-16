@@ -1,7 +1,7 @@
 node_modules/
 dist/
 
-# ??????,?? API ??,?????
+# Local test script that contains an API key - never commit
 test_ant_key.py
 *.local
 .env*

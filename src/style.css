@@ -31,6 +31,8 @@
   }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+#grades button { padding: 11px 4px; white-space: nowrap; }
 html, body { margin: 0; height: 100%; }
 body {
   background: var(--bg);
@@ -114,6 +116,11 @@ button.danger { color: var(--bad); }
 .progress i { display: block; height: 100%; background: var(--brand); border-radius: 99px; transition: width 0.25s; }
 
 .word-big { font-size: 34px; font-weight: 700; text-align: center; margin: 26px 0 6px; word-break: break-word; }
+.root {
+  text-align: left; font-size: 14px; line-height: 1.6; margin-top: 14px; padding: 10px 12px;
+  background: var(--brand-soft); border-radius: 12px;
+}
+.root b { color: var(--brand); margin-right: 4px; }
 .quote {
   font-family: Georgia, "Times New Roman", serif; font-size: 18px; line-height: 1.6;
   border-left: 3px solid var(--brand); padding: 4px 0 4px 14px; margin: 10px 0 16px;

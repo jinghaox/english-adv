@@ -1,6 +1,7 @@
 import { state, buildQueue, gradeCard, removeCard } from '../lib/store.js';
 import { esc } from '../lib/util.js';
 import { speak, canSpeak } from '../lib/speech.js';
+import { ROOTS } from '../data/roots.js';
 
 let tab = 'review';
 
@@ -48,6 +49,7 @@ export default function wordsView(root) {
           <div id="back" hidden>
             <p style="font-size:18px;margin-top:14px">${esc(card.zh)}</p>
             ${card.ex ? `<p class="muted" style="font-family:Georgia,serif;font-style:italic">${esc(card.ex)}</p>` : ''}
+            ${ROOTS[card.w] ? `<div class="root"><b>🌱 词根</b> ${esc(ROOTS[card.w])}</div>` : ''}
           </div>
         </div>
         <button class="primary block" id="show">显示释义</button>
@@ -91,7 +93,8 @@ export default function wordsView(root) {
         ? `<div class="card">${cards
             .map(
               (c) => `<div class="list-item">
-                <div class="grow"><b>${esc(c.w)}</b> ${fmt(c)}<div class="muted small">${esc(c.zh)}</div></div>
+                <div class="grow"><b>${esc(c.w)}</b> ${fmt(c)}<div class="muted small">${esc(c.zh)}</div>
+                  ${ROOTS[c.w] ? `<div class="muted small">🌱 ${esc(ROOTS[c.w])}</div>` : ''}</div>
                 ${canSpeak ? `<button class="icon ghost" data-say="${esc(c.w)}" aria-label="朗读">🔊</button>` : ''}
                 <button class="icon ghost" data-del="${esc(c.w)}" aria-label="删除">🗑️</button>
               </div>`,

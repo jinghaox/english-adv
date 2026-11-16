@@ -41,6 +41,7 @@ export function save() {
 
 export function resetAll() {
   localStorage.removeItem(KEY);
+  localStorage.removeItem('english_adv_guides'); // 已保存的 AI 精读结果
   Object.assign(state, defaults());
 }
 

@@ -103,6 +103,31 @@ export function cachedHeadlines() {
   return (readCache()?.items || []).filter((x) => x.kind === '时事').map((x) => x.headline);
 }
 
+// ---------- AI 精读结果的本地保存 ----------
+
+const GUIDE_KEY = 'english_adv_guides';
+const MAX_GUIDES = 80; // 超出后丢弃最早生成的
+
+function loadGuides() {
+  try {
+    return JSON.parse(localStorage.getItem(GUIDE_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveGuide(id, guide) {
+  const all = loadGuides();
+  all[id] = guide;
+  const ids = Object.keys(all).sort((a, b) => (all[a].at || 0) - (all[b].at || 0));
+  while (ids.length > MAX_GUIDES) delete all[ids.shift()];
+  try {
+    localStorage.setItem(GUIDE_KEY, JSON.stringify(all));
+  } catch {
+    /* 存储已满时放弃保存,不影响本次显示 */
+  }
+}
+
 // ---------- 列表页 ----------
 
 function list(root) {
@@ -384,31 +409,46 @@ async function reader(root, id) {
     openSheet(word, sentenceAt(paras[+span.dataset.p], +span.dataset.o));
   });
 
-  root.querySelector('#guidebtn')?.addEventListener('click', async () => {
-    const box = root.querySelector('#guide');
-    box.innerHTML = '<div class="card"><span class="spinner"></span> <span class="muted">Claude 正在精读这篇文章…</span></div>';
+  const guideBox = root.querySelector('#guide');
+
+  function showGuide(g) {
+    guideBox.innerHTML = `
+      <div class="card"><h3>中文概要</h3><p style="margin:0">${esc(g.summary)}</p></div>
+      ${g.sentences
+        .map(
+          (s) => `<div class="card">
+            <div class="quote" style="font-size:16px">${esc(s.en)}</div>
+            <p>${esc(s.zh)}</p>
+            <p class="small muted" style="margin:0">${esc(s.analysis_zh)}</p>
+          </div>`,
+        )
+        .join('')}
+      ${g.quiz.length ? '<h3>理解题</h3><div id="aiquiz"></div>' : ''}
+      <p class="small muted">精读结果已保存在本机${g.at ? `(生成于 ${dayKey(new Date(g.at))})` : ''},再次打开不会重复消耗 API。
+        ${hasKey() ? '<a href="#" id="regen">重新生成</a>' : ''}</p>`;
+    if (g.quiz.length) renderQuiz(guideBox.querySelector('#aiquiz'), g.quiz);
+    guideBox.querySelector('#regen')?.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      if (confirm('重新生成会再调用一次 API,并覆盖现在保存的精读结果。继续吗?')) generateGuide();
+    });
+  }
+
+  async function generateGuide() {
+    guideBox.innerHTML = '<div class="card"><span class="spinner"></span> <span class="muted">Claude 正在精读这篇文章…</span></div>';
     try {
-      const g = await studyGuide(item.title, fullText);
-      if (!box.isConnected) return;
-      box.innerHTML = `
-        <div class="card"><h3>中文概要</h3><p style="margin:0">${esc(g.summary)}</p></div>
-        ${g.sentences
-          .map(
-            (s) => `<div class="card">
-              <div class="quote" style="font-size:16px">${esc(s.en)}</div>
-              <p>${esc(s.zh)}</p>
-              <p class="small muted" style="margin:0">${esc(s.analysis_zh)}</p>
-            </div>`,
-          )
-          .join('')}
-        ${g.quiz.length ? '<h3>理解题</h3><div id="aiquiz"></div>' : ''}`;
-      if (g.quiz.length) renderQuiz(box.querySelector('#aiquiz'), g.quiz);
+      const g = { ...(await studyGuide(item.title, fullText)), at: Date.now() };
+      saveGuide(id, g); // 先保存:即使用户已经离开这一页,结果也不会白白丢掉
+      if (guideBox.isConnected) showGuide(g);
     } catch (e) {
-      if (!box.isConnected) return;
-      box.innerHTML = `<div class="card small muted">${esc(errorText(e))}</div><button id="guidebtn2" class="block">重试</button>`;
-      box.querySelector('#guidebtn2').onclick = () => reader(root, id);
+      if (!guideBox.isConnected) return;
+      guideBox.innerHTML = `<div class="card small muted">${esc(errorText(e))}</div><button id="guidebtn2" class="block">重试</button>`;
+      guideBox.querySelector('#guidebtn2').onclick = generateGuide;
     }
-  });
+  }
+
+  const savedGuide = loadGuides()[id];
+  if (savedGuide) showGuide(savedGuide);
+  root.querySelector('#guidebtn')?.addEventListener('click', generateGuide);
 
   root.querySelector('#finish').onclick = () => {
     const first = !state.reading.done[id];
